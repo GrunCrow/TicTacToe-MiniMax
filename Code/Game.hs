@@ -24,7 +24,9 @@
 -- win = 3
 -- depth = ?
 
+import Data.Char
 import Data.List
+import System.IO
 
 -- ============================================================================
 --										TicTacToe Objects
@@ -40,7 +42,7 @@ type Board = [[Player]]
 size :: Int
 size = 3
 
--- returns to the next player
+-- returns the next player
 next :: Player -> Player
 next O = X
 next B = B
@@ -61,12 +63,13 @@ full = all (/= B) . concat
 -- full [[O,X,O],[X,B,O],[B,B,B]] -> false
 
 -- turn: returns the next player by examining the input board
+-- we assume player O goes first
 turn :: Board -> Player
-turn g = if os <= xs then O else X	-- if number of Os > Xs then is O turn, else is X turn
+turn board = if os <= xs then O else X	-- if number of Os > Xs then is O turn, else is X turn
 		where
 			os = length (filter (== O) ps)
 			xs = length (filter (== X) ps)
-			ps = concat g
+			ps = concat board
 
 -- diagonal: returns main diagonal of the Board 
 diagonal :: Board -> [Player]
@@ -135,3 +138,70 @@ putBoard = putStrLn . unlines_fun . concat . tabulation bar . map showRow
 --   |   |   
 --   |   |   
 --   |   |   
+
+-- ============================================================================
+--										Game Rules
+-- ============================================================================
+
+--check if the move that the player wants to perfortm is valid
+isValid :: Board -> Int -> Bool
+isValid board position = 0 <= position && position < size^2 && concat board !! position == B
+
+-- chop: breaks a list into maximal segments of a given length
+chop :: Int -> [a] -> [[a]]
+chop n [] = []
+chop n xs = take n xs : chop n (drop n xs)
+
+-- move: empty list if no valid move or list with valid moves
+move :: Board -> Int -> Player -> [Board]
+move board position player =
+	if isValid board position
+		then [chop size (xs ++ [player] ++ ys)]
+		else []
+	where (xs,B:ys) = splitAt position (concat board)
+	
+-- getNat: read position number that player wants to perform	
+getNat :: String -> IO Int
+getNat prompt = do 
+    putStr prompt
+    xs <- getLine
+    if xs /= [] && all isDigit xs then
+        return (read xs)
+    else
+        do putStrLn "ERROR: Invalid number"
+           getNat prompt
+
+
+-- ============================================================================
+--										Human vs Human
+-- ============================================================================
+
+-- run: display current board state
+run :: Board -> Player -> IO ()
+run board player = do --cls
+						goto (1,1)
+						putBoard board
+						run' board player
+
+-- inputs a player and returns a string to ask player to perform next move				
+prompt :: Player -> String
+prompt player = "Jugador " ++ show player ++ ", introduce tu movimiento: "
+
+goto :: (Int,Int) -> IO ()
+goto (x,y) = putStr ("\ESC[" ++ show y ++ ";" ++ show x ++ "H")
+
+-- checks if any player has won or if board is full. if not if calls getnat to ask for next move, 
+-- if move is valid then it performs the move if not error and rerun run with same parameters
+run' :: Board -> Player -> IO ()
+run' board player | wins O board = putStrLn "Jugador O gana!\n"
+         | wins X board = putStrLn "Jugador X gana!\n"
+         | full board   = putStrLn "Empate!\n"
+         | otherwise = 
+            do position <- getNat (prompt player)
+               case move board position player of
+                  [] -> do putStrLn "Error: Movimiento no valido"
+                           run' board player
+                  [board'] -> run board' (next player)
+				  
+humanvshuman :: IO ()
+humanvshuman = run empty O
