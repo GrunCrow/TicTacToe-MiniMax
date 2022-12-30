@@ -29,7 +29,7 @@ import Data.List
 import System.IO
 
 -- ============================================================================
---										TicTacToe Objects
+--				TicTacToe Objects
 -- ============================================================================
 
 -- o < blank < x
@@ -49,47 +49,54 @@ next B = B
 next X = O
 
 -- ============================================================================
---										Board Functions
+--				Board Functions
 -- ============================================================================
 
 -- empty: generates an empty Board
 empty :: Board
-empty = replicate size (replicate size B)
+empty = replicate size (replicate size B) -- replicate 3 (replicate 3 B)
 -- empty -> [[B,B,B],[B,B,B],[B,B,B]]
 
 -- full: check if the Board is full
 full:: Board -> Bool
-full = all (/= B) . concat
--- full [[O,X,O],[X,B,O],[B,B,B]] -> false
+full  b = and (map (all (/= B)) b)
+-- and [True,True,True]  -> True
+-- and [True,False,True] -> False
+
+-- True -> The board is full
+-- False -> There is, at least, one blank in the board.
+
 
 -- turn: returns the next player by examining the input board
 -- we assume player O goes first
 turn :: Board -> Player
 turn board = if os <= xs then O else X	-- if number of Os > Xs then is O turn, else is X turn
 		where
-			os = length (filter (== O) ps)
-			xs = length (filter (== X) ps)
-			ps = concat board
+			os = length (filter (== O) ps) -- number of O's
+			xs = length (filter (== X) ps) -- number of X's
+			ps = concat board -- concat board merge the 2D list in 1D list.
 
 -- diagonal: returns main diagonal of the Board 
 diagonal :: Board -> [Player]
-diagonal diag = [diag !! n !! n | n <- [0..size-1]]
+diagonal diag = [diag !! n !! n | n <- [0..size-1]] 
+-- !! Operator gets the n-th element in the list. If we have 2D list, 
+-- we use twice the operator because we want the diagonal items.
+
 -- diagonal [[O,X,O],[X,B,O],[B,B,B]] -> [O,B,B]
 
 -- wins: decides if a player has won a Board, callable by won that indicates what player has won
 wins :: Player -> Board -> Bool
-wins player board = any line (rows ++ cols ++ diags)
+wins player board = row || cols || p_diag || s_diag
 			where
-				line = all (==player)
-				rows = board
-				cols = transpose board
-				diags = [diagonal board, diagonal (map reverse board)]
+				row = or (map (all (== player)) board)
+				cols =  or (map (all (== player)) (transpose board) )
+				p_diag = (all (== player)) (diagonal board)
+				s_diag = (all (== player)) (diagonal (map reverse board))
 
-won :: Board -> Bool
-won board = wins O board || wins X board
+
 
 -- ============================================================================
---										Display Board
+--				Display Board
 -- ============================================================================
 
 -- tabulation: tabulates values between values of the list, for screen showing the board
@@ -140,7 +147,7 @@ putBoard = putStrLn . unlines_fun . concat . tabulation bar . map showRow
 --   |   |   
 
 -- ============================================================================
---										Game Rules
+--				Game Rules
 -- ============================================================================
 
 --check if the move that the player wants to perfortm is valid
@@ -152,12 +159,12 @@ chop :: Int -> [a] -> [[a]]
 chop n [] = []
 chop n xs = take n xs : chop n (drop n xs)
 
--- move: empty list if no valid move or list with valid moves
+-- move: empty list if no valid move or list with valid movements
 move :: Board -> Int -> Player -> [Board]
 move board position player =
 	if isValid board position
 		then [chop size (xs ++ [player] ++ ys)]
-		else []
+		else [] -- emptylist -> not valid.
 	where (xs,B:ys) = splitAt position (concat board)
 	
 -- getNat: read position number that player wants to perform	
@@ -173,35 +180,33 @@ getNat prompt = do
 
 
 -- ============================================================================
---										Human vs Human
+--			Human vs Human
 -- ============================================================================
 
 -- run: display current board state
 run :: Board -> Player -> IO ()
-run board player = do --cls
-						goto (1,1)
-						putBoard board
+run board player = do 
+						putBoard board -- displays board
 						run' board player
 
 -- inputs a player and returns a string to ask player to perform next move				
 prompt :: Player -> String
 prompt player = "Jugador " ++ show player ++ ", introduce tu movimiento: "
 
-goto :: (Int,Int) -> IO ()
-goto (x,y) = putStr ("\ESC[" ++ show y ++ ";" ++ show x ++ "H")
 
 -- checks if any player has won or if board is full. if not if calls getnat to ask for next move, 
 -- if move is valid then it performs the move if not error and rerun run with same parameters
 run' :: Board -> Player -> IO ()
-run' board player | wins O board = putStrLn "Jugador O gana!\n"
+run' board player 
+	 | wins O board = putStrLn "Jugador O gana!\n"
          | wins X board = putStrLn "Jugador X gana!\n"
          | full board   = putStrLn "Empate!\n"
          | otherwise = 
-            do position <- getNat (prompt player)
-               case move board position player of
-                  [] -> do putStrLn "Error: Movimiento no valido"
-                           run' board player
-                  [board'] -> run board' (next player)
+            do position <- getNat (prompt player) -- Gets the position that the player wants.
+               case move board position player of 
+                  [] -> do putStrLn "Error: Movimiento no valido" -- empty list -> not valid.
+                           run' board player -- ask again
+                  [board'] -> run board' (next player) -- displays board and turn to the next player.
 				  
 humanvshuman :: IO ()
 humanvshuman = run empty O

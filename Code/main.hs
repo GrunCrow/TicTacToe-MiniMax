@@ -1,5 +1,3 @@
-module Main where
-
 -- https://hackage.haskell.org/package/gloss
 
 -- in C:\Program Files (x86)\WinHugs\packages
@@ -8,5 +6,7 @@ module Main where
 
 -- import Graphics.Gloss
 
+import TicTacToe.HumanVSMachine
+
 main :: IO ()
-main = putStrLn	"Hello, World!"
+main = humanvsmachine
