@@ -1,4 +1,4 @@
-module TicTacToe.HumanVSMachine where
+module TicTacToe.MachineVSMachine where
 
 import TicTacToe.Objects
 import TicTacToe.DisplayBoard
@@ -65,12 +65,8 @@ play' board player
 	| wins O board = putStrLn "Jugador O gana!\n"
         | wins X board = putStrLn "Jugador X gana!\n"
         | full board   = putStrLn "Empate!\n"
-	| player == O = do 
-			position <- getNat (prompt player)
-			case move board position player of
-				[] -> do play' board player	-- putStrLn "Error: Movimiento no valido"
-				[board'] -> play board' (next player)
+	| player == O = do (play $! (bestmoves board player)) (next player)
         | player == X = do (play $! (bestmoves board player)) (next player) -- putStrLn "Jugador X esta pensando..."
 		
-humanvsmachine :: IO ()
-humanvsmachine = do play empty O		
+machinevsmachine :: IO ()
+machinevsmachine = do play empty O		

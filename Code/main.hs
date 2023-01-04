@@ -7,6 +7,8 @@
 -- import Graphics.Gloss
 
 import TicTacToe.HumanVSMachine
+import TicTacToe.HumanVSHuman
+import TicTacToe.MachineVSMachine
 
 main :: IO ()
-main = humanvsmachine
+main = machinevsmachine
