@@ -45,10 +45,7 @@ bestmoves board player = head [board' | Node (board', player') _ <- ts, player' 
 								tree = prune depth (gametree board player)
 								Node (_,best) ts = minimax tree
 
--- inputs a player and returns a string to ask player to perform next move				
-prompt :: Player -> String
-prompt player = "Jugador " ++ show player ++ ", introduce tu movimiento: "
-						
+					
 -- ============================================================================
 --				Run the Game
 -- ============================================================================
@@ -66,9 +63,12 @@ play' board player
         | wins X board = putStrLn "Jugador X gana!\n"
         | full board   = putStrLn "Empate!\n"
 	| player == O = do 
-			position <- getNat (prompt player)
+			
+			position <- getNat ("Jugador " ++ show player ++ ", introduce tu movimiento: " )
 			case move board position player of
-				[] -> do play' board player	-- putStrLn "Error: Movimiento no valido"
+				[] -> do
+					putStrLn "Error: Movimiento no valido" 
+					play' board player
 				[board'] -> play board' (next player)
         | player == X = do (play $! (bestmoves board player)) (next player) -- putStrLn "Jugador X esta pensando..."
 		

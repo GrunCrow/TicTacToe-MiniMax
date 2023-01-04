@@ -13,10 +13,6 @@ run board player = do
 						putBoard board -- displays board
 						run' board player
 
--- inputs a player and returns a string to ask player to perform next move				
-prompt :: Player -> String
-prompt player = "Jugador " ++ show player ++ ", introduce tu movimiento: "
-
 
 -- checks if any player has won or if board is full. if not if calls getnat to ask for next move, 
 -- if move is valid then it performs the move if not error and rerun run with same parameters
@@ -26,7 +22,7 @@ run' board player
          | wins X board = putStrLn "Jugador X gana!\n"
          | full board   = putStrLn "Empate!\n"
          | otherwise = 
-            do position <- getNat (prompt player) -- Gets the position that the player wants.
+            do position <- getNat ("Jugador " ++ show player ++ ", introduce tu movimiento: " ) -- Gets the position that the player wants.
                case move board position player of 
                   [] -> do putStrLn "Error: Movimiento no valido" -- empty list -> not valid.
                            run' board player -- ask again

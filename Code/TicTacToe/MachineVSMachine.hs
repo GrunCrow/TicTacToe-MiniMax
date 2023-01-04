@@ -44,10 +44,6 @@ bestmoves board player = head [board' | Node (board', player') _ <- ts, player' 
 							where
 								tree = prune depth (gametree board player)
 								Node (_,best) ts = minimax tree
-
--- inputs a player and returns a string to ask player to perform next move				
-prompt :: Player -> String
-prompt player = "Jugador " ++ show player ++ ", introduce tu movimiento: "
 						
 -- ============================================================================
 --				Run the Game
